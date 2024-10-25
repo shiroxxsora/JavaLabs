@@ -1,0 +1,46 @@
+package ru.bsu.webdev.zmeyouka;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.util.LinkedList;
+import java.util.List;
+
+public class Snake {
+	public int x;
+	public int y;
+	protected Color lineColor = Color.BLACK;
+	protected Color fillHeadColor = Color.GREEN;
+	protected Color fillBodyColor = Color.YELLOW;
+	protected List<Pair<Integer, Integer>> body = new LinkedList<>();
+
+	public Snake(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	public void setHeadColor(Color c) {
+		this.fillHeadColor = c;
+	}
+
+	public void setBodyColor(Color c) {
+		this.fillBodyColor = c;
+	}
+	
+	public void render(Graphics g) {
+		g.setColor(fillHeadColor);
+		g.fillRect(x * GameMap.H, y * GameMap.H, GameMap.H, GameMap.H);
+		g.setColor(lineColor);
+		g.drawRect(x * GameMap.H, y * GameMap.H, GameMap.H, GameMap.H);
+		
+		
+
+	}
+
+	public void Move(int x, int y) {
+		body.addFirst(new Pair<Integer, Integer>(this.x, this.y));
+		
+		this.x = x;
+		this.y = y;
+		body.removeLast();
+	}
+}

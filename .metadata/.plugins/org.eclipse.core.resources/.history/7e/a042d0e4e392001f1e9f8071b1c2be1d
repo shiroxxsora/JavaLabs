@@ -1,0 +1,20 @@
+package ru.bsu.webdev.zmeyouka;
+
+import java.awt.Graphics;
+
+public class Apple {
+	public int x;
+	public int y;
+	
+	public Apple(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	public void render(Graphics g) {
+		g.setColor(fillHeadColor);
+		g.fillRect(x * GameMap.H, y * GameMap.H, GameMap.H, GameMap.H);
+		g.setColor(lineColor);
+		g.drawRect(x * GameMap.H, y * GameMap.H, GameMap.H, GameMap.H);
+	}
+}

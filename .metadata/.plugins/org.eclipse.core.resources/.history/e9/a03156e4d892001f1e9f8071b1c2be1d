@@ -1,0 +1,35 @@
+package ru.bsu.webdev.zmeyouka;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Snake {
+	public int x;
+	public int y;
+	protected Color lineColor = Color.BLACK;
+	protected Color fillHeadColor = Color.RED;
+	protected Color fillBodyColor = Color.YELLOW;
+	protected ArrayList<Pair<Integer, Integer>> body = new ArrayList<Pair<Integer, Integer>>();
+
+	public Snake(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	public void setHeadColor(Color c) {
+		this.fillHeadColor = c;
+	}
+
+	public void setBodyColor(Color c) {
+		this.fillBodyColor = c;
+	}
+	
+	public void render(Graphics g) {
+		g.setColor(fillHeadColor);
+		g.fillRect(x * GameMap.H, y * GameMap.H, GameMap.H, GameMap.H);
+		g.setColor(lineColor);
+		g.drawRect(x * GameMap.H, y * GameMap.H, GameMap.H, GameMap.H);
+	}
+}

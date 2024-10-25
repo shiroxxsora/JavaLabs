@@ -1,0 +1,72 @@
+package ru.bsu.webdev.zmeyouka;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.util.LinkedList;
+import java.util.List;
+
+public class Snake {
+	public int x;
+	public int y;
+	protected Color lineColor = Color.BLACK;
+	protected Color fillHeadColor = Color.GREEN;
+	protected Color fillBodyColor = Color.YELLOW;
+	protected List<Pair<Integer, Integer>> body = new LinkedList<>();
+
+	public Snake(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	public void setHeadColor(Color c) {
+		this.fillHeadColor = c;
+	}
+
+	public void setBodyColor(Color c) {
+		this.fillBodyColor = c;
+	}
+	
+	public void render(Graphics g) {
+		for(Pair<Integer, Integer> bodyPart : body){
+			g.setColor(fillBodyColor);
+			g.fillRect(bodyPart.First * GameMap.H, bodyPart.Second * GameMap.H, GameMap.H, GameMap.H);
+			g.setColor(lineColor);
+			g.drawRect(bodyPart.First * GameMap.H, bodyPart.Second * GameMap.H, GameMap.H, GameMap.H);
+		}
+		
+		g.setColor(fillHeadColor);
+		g.fillRect(x * GameMap.H, y * GameMap.H, GameMap.H, GameMap.H);
+		g.setColor(lineColor);
+		g.drawRect(x * GameMap.H, y * GameMap.H, GameMap.H, GameMap.H);
+
+	}
+
+	// return false если идем в самого себя
+	public boolean Move(Pair<Integer, Integer> direction, Pair<Integer, Integer> borders) {
+		if(body.getFirst().First == x+direction.First 
+				&& body.getFirst().Second == this.y+direction.Second
+				) {
+			
+			return false;
+		}
+		
+		body.addFirst(new Pair<Integer, Integer>(this.x, this.y));
+		
+		this.x = x+direction.First;
+		this.y = y+direction.Second;
+		
+		if(this.x > borders.Second)
+			this.x = 1;
+		if(this.x < 1)
+			this.x = borders.Second;
+		
+		if(this.y > borders.First)
+			this.y = 1;
+		if(this.y < 1)
+			this.y = borders.First;
+		
+		body.removeLast();
+		
+		return true;
+	}
+}
