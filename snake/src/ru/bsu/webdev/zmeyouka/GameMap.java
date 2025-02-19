@@ -1,0 +1,169 @@
+package ru.bsu.webdev.zmeyouka;
+
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class GameMap extends JPanel implements KeyListener {
+	private static final long serialVersionUID = -6839529341001166798L;
+	public static int WIDTH = 600;
+	public static int HEIGHT = 500;
+	public static int H = 20;
+	public static int M = 20;
+	public static int N = 10;
+	protected Snake snake;
+	protected Apple apple;
+	protected Pair<Integer, Integer> direction = new Pair<Integer, Integer>(0, -1);
+	protected Pair<Integer, Integer> borders = new Pair<Integer, Integer>(M, N);
+	protected Timer timer;
+	protected HashMap<Integer, Boolean> pressedKeys;
+
+	public GameMap() {
+		System.out.println("GameMap instance created...");
+		this.snake = new Snake(5, M-2);
+		this.apple = new Apple(7, M-7);
+		this.snake.body.add(new Pair<Integer, Integer>(5, M-1));
+		this.snake.body.add(new Pair<Integer, Integer>(5, M-0));
+
+		this.pressedKeys = new HashMap<Integer, Boolean>();
+		this.pressedKeys.put(KeyEvent.VK_W, false);
+		this.pressedKeys.put(KeyEvent.VK_A, false);
+		this.pressedKeys.put(KeyEvent.VK_S, false);
+		this.pressedKeys.put(KeyEvent.VK_D, false);
+
+		timer = new Timer(1000 / 10, e -> {
+            update();
+            repaint();
+        });
+        timer.start();
+	}
+
+	protected void update() {
+		if(!this.snake.Move(direction, borders)) {
+			GameOver();
+		}
+		
+		if(this.snake.x == this.apple.x && this.snake.y == this.apple.y) {
+			this.snake.addCell();
+			
+			boolean isAppleInside = false;
+			do {
+				apple.x = Randomizer.getInt(1, N);
+				apple.y = Randomizer.getInt(1, M);
+				
+				for(Pair<Integer, Integer> cell : this.snake.body) {
+					if(apple.x == cell.First && apple.y == cell.Second) {
+						isAppleInside = true;
+						break;
+					}
+				}
+				
+			}
+			while(isAppleInside);
+		}
+	}
+
+	protected void GameOver() {
+		System.out.println("GameOver ... or not?");
+		
+	}
+
+	protected void render(Graphics g) {
+		int y = 0;
+		for (int j = 1; j <= M; j++) { // up->down
+
+			y = j;
+			for (int i = 1; i <= N; i++) { // left->right
+				int x = i;
+				drawSquare(g, x, y, Color.GRAY, Color.BLACK);
+			}
+		}
+		this.snake.render(g);
+		this.apple.render(g);
+	}
+
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		this.render(g);
+	}
+
+	protected void drawSquare(Graphics g, int x, int y, Color lineColor, Color fillColor) {
+		g.setColor(lineColor);
+		g.fillRect(x * H, y * H, H, H);
+		g.setColor(fillColor);
+		g.drawRect(x * H, y * H, H, H);
+	}
+
+	public void keyPressed(KeyEvent e) {
+		int code = e.getKeyCode();
+		System.out.println("keyCode: " + code);
+
+		switch (code) {
+			case KeyEvent.VK_W:
+				this.pressedKeys.put(KeyEvent.VK_W, true);
+				direction.First = 0;
+				direction.Second = -1;
+				break;
+				
+			case KeyEvent.VK_A:
+				this.pressedKeys.put(KeyEvent.VK_A, true);
+				direction.First = -1;
+				direction.Second = 0;
+				break;
+				
+			case KeyEvent.VK_S:
+				this.pressedKeys.put(KeyEvent.VK_S, true);
+				direction.First = 0;
+				direction.Second = 1;
+				break;
+				
+			case KeyEvent.VK_D:
+				this.pressedKeys.put(KeyEvent.VK_D, true);
+				direction.First = 1;
+				direction.Second = 0;
+				break;
+				
+			case KeyEvent.VK_BACK_SPACE:
+				this.snake = new Snake(5, M-2);
+				this.apple = new Apple(7, M-7);
+				this.snake.body.add(new Pair<Integer, Integer>(5, M-1));
+				this.snake.body.add(new Pair<Integer, Integer>(5, M-0));
+				direction.First = 0;
+				direction.Second = -1;
+				break;
+		}
+		
+		System.out.println(pressedKeys);
+	}
+	
+	public void keyReleased(KeyEvent e) {
+		int code = e.getKeyCode();
+		
+		switch (code) {
+			case KeyEvent.VK_W:
+				this.pressedKeys.put(KeyEvent.VK_W, false);
+				break;
+				
+			case KeyEvent.VK_A:
+				this.pressedKeys.put(KeyEvent.VK_A, false);
+				break;
+				
+			case KeyEvent.VK_S:
+				this.pressedKeys.put(KeyEvent.VK_S, false);
+				break;
+				
+			case KeyEvent.VK_D:
+				this.pressedKeys.put(KeyEvent.VK_D, false);
+				break;
+		}
+	}
+
+	public void keyTyped(KeyEvent e) {
+	}
+}
