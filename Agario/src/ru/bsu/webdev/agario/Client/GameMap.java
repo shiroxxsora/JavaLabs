@@ -5,9 +5,12 @@ import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.swing.JPanel;
 import javax.swing.Timer;
+
+import ru.bsu.webdev.agario.Server.Commands.InitializePlayer;
 
 
 public class GameMap extends JPanel implements KeyListener{
@@ -24,7 +27,6 @@ public class GameMap extends JPanel implements KeyListener{
 	
 	private long lastTime;
 	private double deltaTime;
-	private boolean isPlayerReceived = false;
 	
 	private Timer timer;
 	
@@ -45,13 +47,15 @@ public class GameMap extends JPanel implements KeyListener{
                 // Ожидаем получения объекта Player от сервера
                 Object received = Client.in.readObject();
                 if (received instanceof Player) {
+                	Player receivedPlayer = (Player) received;
                 	if(!players.contains((Player) received)) {
-	                    player = (Player) received;
-	                    players.add(player);
-	                    System.out.println("Подключился новый игрок: " + player);
+	                    players.add(receivedPlayer);
+	                    System.out.println("Подключился новый игрок: " + receivedPlayer);
                 	}
                 	else {
-                		players.set(players.indexOf(player), player);
+                		System.out.println("МЕНЯЕМ ПЛЕЕРА " + receivedPlayer);
+                		System.out.println(players.indexOf(receivedPlayer));
+                		players.set(players.indexOf(receivedPlayer), receivedPlayer);
                 	}
                 }
             }
@@ -74,12 +78,14 @@ public class GameMap extends JPanel implements KeyListener{
 	}
 	
 	private void createCurrentPlayerFromServer() {
-		Client.out.println("initialize_player");  // Запрос серверу
 		try { 
+			Client.out.writeObject(new InitializePlayer());  // Запрос серверу
+			Client.out.flush();
+			
 			player = (Player) Client.in.readObject();
 			player.isCurrentPlayer = true;
 			players.add(player);
-			System.out.println(player);
+			System.out.println("Мы игрок" + player);
 		} 
 		catch (Exception e) {
 			e.printStackTrace();
@@ -90,13 +96,11 @@ public class GameMap extends JPanel implements KeyListener{
 		System.out.println(deltaTime);
 		
 		if(players.isEmpty()) return;
-		if(isPlayerReceived) {
-			
-		}
 		
 		for(Player player:players){
 			player.update(deltaTime);
 		}
+
 		
 		counter.update(deltaTime);
 	}

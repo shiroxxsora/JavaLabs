@@ -1,26 +1,30 @@
 package ru.bsu.webdev.agario.Server;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 
 import ru.bsu.webdev.agario.Client.Player;
+import ru.bsu.webdev.agario.Server.Commands.CMD;
+import ru.bsu.webdev.agario.Server.Commands.InitializePlayer;
 
 public class ClientHandler extends Thread{
 	private Socket socket;
 	private Player player;
-    private BufferedReader in;
+	
+	private static int freePlayerID = 0;
+	
+    private ObjectInputStream in;
     private ObjectOutputStream out;
     
 	public ClientHandler(Socket clientSocket) {
 		this.socket = clientSocket;
 		System.out.println("Создан новый ClientHandler" + socket.getInetAddress());
 		try {
-			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new ObjectOutputStream(socket.getOutputStream());
+			out = new ObjectOutputStream(socket.getOutputStream());
+			out.flush(); // Обязательно или клиент или сервер должны отправить заголовок
+			in = new ObjectInputStream(socket.getInputStream());
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -31,13 +35,16 @@ public class ClientHandler extends Thread{
 	public void run() {
 		System.out.println("Запущен поток ClientHandler" + socket.getInetAddress());
 		try {
-            String message;
-            while ((message = in.readLine()) != null) {
-                System.out.println("Received: " + message);
-                if("initialize_player".equals(message)) {
-                	addNewPlayerOnServer();
+            Object message;
+            while ((message = in.readObject()) != null) {
+                if(message instanceof CMD) {
+	                if(message instanceof InitializePlayer) {
+	                	addNewPlayerOnServer();
+	                }
                 }
-                //broadcast(message);
+                else if(message instanceof Player) {
+                	broadcast((Player) message);
+                }
             }
         } 
 		catch (Exception e) {
@@ -56,10 +63,12 @@ public class ClientHandler extends Thread{
 	
 	
 	private void addNewPlayerOnServer() {
-//		if(ServerCore.clients.size() == 1) 
-		//Пока рандомно надо теперь проверять....
-		{
+		try {
+	//		if(ServerCore.clients.size() == 1) 
+			//Пока рандомно надо теперь проверять....
+		
 			player = new Player();
+			player.ID = freePlayerID++;
 			player.randomPosition();
 			
 			System.out.println(player);
@@ -68,21 +77,40 @@ public class ClientHandler extends Thread{
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
 			
-		synchronized (ServerCore.clients) {
-            for (ClientHandler client : ServerCore.clients) {
-                if (client != this) {
-                    
-                }
-            }
-        }
+			synchronized (ServerCore.clients) {
+	            for (ClientHandler client : ServerCore.clients) {
+	                if (client != this) {
+							out.writeObject(client.player);
+							client.out.writeObject(player);
+							client.out.flush();
+	                }
+	            }
+	        }
+			out.flush();
+		} 
+		catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
-	/*
-	 * private void broadcast(String message) { synchronized (ServerCore.clients) {
-	 * for (ClientHandler client : ServerCore.clients) { if (client != this) {
-	 * client.out.println(message); } } } }
-	 */
+	
+	private void broadcast(Player player) { 
+		//System.out.println(player);
+		try {
+			synchronized (ServerCore.clients) {
+				for (ClientHandler client : ServerCore.clients) { 
+					if (client != this) {
+							client.out.writeObject(player);
+							client.out.flush();
+					} 
+				} 
+			} 
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		} 
+	}
 	
 }

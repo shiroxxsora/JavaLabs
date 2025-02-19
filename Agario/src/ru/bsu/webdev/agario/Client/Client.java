@@ -1,7 +1,7 @@
 package ru.bsu.webdev.agario.Client;
 
 import java.io.ObjectInputStream;
-import java.io.PrintWriter;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import javax.swing.JFrame;
@@ -14,14 +14,15 @@ public class Client extends JFrame{
     
     public static Socket socket;
     public static ObjectInputStream in;
-    public static PrintWriter out;
+    public static ObjectOutputStream out;
 	
 	public void run() {
 		try{
 			socket = new Socket(SERVER_IP, PORT);
 			try {
+				out = new ObjectOutputStream(Client.socket.getOutputStream());
+				out.flush(); // Обязательно или клиент или сервер должны отправить заголовок
 				in = new ObjectInputStream(Client.socket.getInputStream());
-	            out = new PrintWriter(Client.socket.getOutputStream(), true);
 			}
 			catch(Exception e) {
 				e.printStackTrace();

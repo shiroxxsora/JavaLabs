@@ -3,15 +3,17 @@ package ru.bsu.webdev.agario.Client;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Random;
 
 
-public class Player implements Serializable{
+public class Player implements Serializable, Cloneable{
 	private static final long serialVersionUID = -4244531400163884594L;
 
 	private Color fillColor = Color.blue;
 			// ColorEnum.getRandomColor();
 	
+	public int ID;
 	public Vector2 position;
 	private Vector2 direction;
 	
@@ -23,9 +25,24 @@ public class Player implements Serializable{
 	public Player() {
 	}
 	
+	private void sendPlayerData() {
+		try {
+			Player sendPlayer = (Player) this.clone();
+			sendPlayer.isCurrentPlayer = false;
+			
+            Client.out.writeObject(sendPlayer);
+            Client.out.reset();
+            Client.out.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+	}
 	
 	public void update(double deltaTime) {
-		move(deltaTime);
+		if(isCurrentPlayer) {
+			move(deltaTime);
+			sendPlayerData();
+		}
 		debug();
 	}
 	
@@ -40,7 +57,6 @@ public class Player implements Serializable{
 		if(isCurrentPlayer)
 			if(GameMap.instance.getMousePosition() != null) {
 				Vector2 mousePosition = new Vector2(GameMap.instance.getMousePosition());
-				
 				
 				Vector2 targetDirection = mousePosition.subtract(position).clampMagnitude(1f);
 				System.out.println(targetDirection.magnitude());
@@ -66,8 +82,7 @@ public class Player implements Serializable{
 	}
 	
 	private void debug() {
-		System.out.println("pos " + position.x + " " + position.y);
-		System.out.println("dir " + direction.x + " " + direction.y);
+		System.out.println(toString());
 	}
 	
 	public void randomPosition() {
@@ -81,7 +96,18 @@ public class Player implements Serializable{
 	
 	@Override
 	public String toString() {
-		return "Player{position='" + position + "', direction=" + direction + ", speed=" + speed + ", size=" + size + "}";
+		return "Player{ID ='" + ID + "', position='" + position + "', direction=" + direction + ", speed=" + speed + ", size=" + size + "}";
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (other == null || getClass() != other.getClass()) return false;
+		return this.ID == ((Player) other).ID;
+	}
+	
+	@Override
+	public int hashCode() {
+	    return Objects.hash(ID);
 	}
 	
 }
