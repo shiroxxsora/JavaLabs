@@ -4,10 +4,7 @@ import java.awt.Color;
 import java.util.Random;
 
 public enum ColorEnum {
-    WHITE(Color.white),
-    CYAN(Color.cyan),
     ORANGE(Color.orange),
-    MAGENTO(Color.magenta),
     BLUE(Color.blue),
     GREEN(Color.green),
     ;

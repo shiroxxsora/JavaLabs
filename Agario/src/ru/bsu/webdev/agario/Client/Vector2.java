@@ -1,5 +1,6 @@
 package ru.bsu.webdev.agario.Client;
 
+import java.awt.Point;
 import java.io.Serializable;
 
 public class Vector2 implements Serializable{
@@ -8,15 +9,26 @@ public class Vector2 implements Serializable{
 	public double x;
 	public double y;
 	
-	public static Vector2 zero = new Vector2(0.0, 0.0);
+	public static final Vector2 zero = new Vector2(0.0, 0.0);
 	
 	public Vector2 (double x, double y){
 		this.x = x;
 		this.y = y;
 	}
 	
+	public Vector2(Point point) {
+		this.x = point.x;
+		this.y = point.y;
+	}
+
+	public Vector2 abs(){
+		return new Vector2(Math.abs(this.x), Math.abs(this.y));
+	}
 	public Vector2 add(Vector2 other){
 		return new Vector2(this.x + other.x, this.y + other.y);
+	}
+	public Vector2 subtract(Vector2 other){
+		return new Vector2(this.x - other.x, this.y - other.y);
 	}
 
 	public Vector2 mul(Vector2 other) {

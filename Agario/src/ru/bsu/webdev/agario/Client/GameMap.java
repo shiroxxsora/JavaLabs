@@ -4,40 +4,65 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.time.LocalTime;
 import java.util.ArrayList;
 
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
 
-public class GameMap extends JPanel implements KeyListener {
+public class GameMap extends JPanel implements KeyListener{
 	private static final long serialVersionUID = 1184690316216124564L;
 	
-	public static int WIDTH = 960;
-	public static int HEIGHT = 640;
+	public static GameMap instance;
+	
+	public static int WIDTH = 1280;
+	public static int HEIGHT = 720;
 	
 	private ArrayList<Player> players;
 	private Player player;
+	private FPSCounter counter;
 	
 	private long lastTime;
 	private double deltaTime;
+	private boolean isPlayerReceived = false;
+	
 	private Timer timer;
 	
-	
 	public GameMap() {
+		instance = this;
 		System.out.println("GameMap instance created...");
 		
 		players = new ArrayList<>();
-		
-		getNewPlayerFromServer();
-		lastTime = System.nanoTime();
+		createCurrentPlayerFromServer();
+		new Thread(this::listenToServerPlayerMessage).start();
+		counter = new FPSCounter(10, 20);
+		mainTimer();
+	}
+	
+	private void listenToServerPlayerMessage() {
+		try {
+            while (true) {
+                // Ожидаем получения объекта Player от сервера
+                Object received = Client.in.readObject();
+                if (received instanceof Player) {
+                	if(!players.contains((Player) received)) {
+	                    player = (Player) received;
+	                    players.add(player);
+	                    System.out.println("Подключился новый игрок: " + player);
+                	}
+                	else {
+                		players.set(players.indexOf(player), player);
+                	}
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+	}
 
-		timer = new Timer(1000 / 60, e -> {
+	private void mainTimer() {
+		lastTime = System.nanoTime();
+		timer = new Timer(1000 / 120, e -> {
 			long currentTime = System.nanoTime();
 			deltaTime = (currentTime - lastTime) / 1_000_000_000.0;
 			lastTime = currentTime;
@@ -48,10 +73,11 @@ public class GameMap extends JPanel implements KeyListener {
         timer.start();
 	}
 	
-	private void getNewPlayerFromServer() {
-		Client.out.println("initialize_player");
-		try {
+	private void createCurrentPlayerFromServer() {
+		Client.out.println("initialize_player");  // Запрос серверу
+		try { 
 			player = (Player) Client.in.readObject();
+			player.isCurrentPlayer = true;
 			players.add(player);
 			System.out.println(player);
 		} 
@@ -64,18 +90,28 @@ public class GameMap extends JPanel implements KeyListener {
 		System.out.println(deltaTime);
 		
 		if(players.isEmpty()) return;
+		if(isPlayerReceived) {
+			
+		}
 		
 		for(Player player:players){
 			player.update(deltaTime);
 		}
+		
+		counter.update(deltaTime);
 	}
 	
 	protected void render(Graphics g) {
+		g.setColor(Color.black);
+		g.drawRect(20, 20, WIDTH-300, HEIGHT-80);
+		
 		if(players.isEmpty()) return;
 		
 		for(Player player:players){
 			player.render(g);
 		}
+		
+		counter.render(g);
 	}
 	
 	protected void paintComponent(Graphics g) {

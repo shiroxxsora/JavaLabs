@@ -56,7 +56,9 @@ public class ClientHandler extends Thread{
 	
 	
 	private void addNewPlayerOnServer() {
-		if(ServerCore.clients.size() == 1) {
+//		if(ServerCore.clients.size() == 1) 
+		//Пока рандомно надо теперь проверять....
+		{
 			player = new Player();
 			player.randomPosition();
 			
