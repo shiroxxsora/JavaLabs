@@ -20,18 +20,20 @@ public class Player implements Serializable, Cloneable{
 	private double speed = 5;
 	public int size = 20;
 	public boolean isCurrentPlayer = false;
+	public boolean isDestroyed = false;
 	
 	
 	public Player() {
 	}
 	
-	private void sendPlayerData() {
+	public void sendPlayerData() {
 		try {
 			Player sendPlayer = (Player) this.clone();
-			sendPlayer.isCurrentPlayer = false;
+			sendPlayer.isCurrentPlayer = false; // Костыль мб както пофиксится потом
+			// P.S. не пофиксилось
 			
             Client.out.writeObject(sendPlayer);
-            Client.out.reset();
+            Client.out.reset(); // Очищаем кеш
             Client.out.flush();
         } catch (Exception e) {
             e.printStackTrace();
@@ -43,7 +45,10 @@ public class Player implements Serializable, Cloneable{
 			move(deltaTime);
 			sendPlayerData();
 		}
-		debug();
+		
+		// Так как список игроков перебирается добавляем играка в очередь на удаление чтобы небыло java.util.ConcurrentModificationException
+		if(isDestroyed)
+			GameMap.instance.playersToRemove.add(this);
 	}
 	
 	public void render(Graphics g) {
@@ -56,33 +61,33 @@ public class Player implements Serializable, Cloneable{
 	private void move(double deltaTime) {
 		if(isCurrentPlayer)
 			if(GameMap.instance.getMousePosition() != null) {
-				Vector2 mousePosition = new Vector2(GameMap.instance.getMousePosition());
-				
-				Vector2 targetDirection = mousePosition.subtract(position).clampMagnitude(1f);
-				System.out.println(targetDirection.magnitude());
-				
-				if(targetDirection.magnitude() < 0.99)
-					targetDirection = targetDirection.mul(targetDirection.abs());
-				
-				direction = targetDirection;
+				try {
+					Vector2 mousePosition = new Vector2(GameMap.instance.getMousePosition());
+					
+					Vector2 targetDirection = mousePosition.subtract(position).clampMagnitude(1f);
+					System.out.println(targetDirection.magnitude());
+					
+					if(targetDirection.magnitude() < 0.99)
+						targetDirection = targetDirection.mul(targetDirection.abs());
+					
+					direction = targetDirection;
+				}
+				catch (Exception e) {
+				}
 			}
 		
-		if(position.x + size/2 + 290 > GameMap.WIDTH && direction.x > 0)
+		if(position.x + size/2 > GameMap.WIDTH-290 && direction.x > 0)
 			direction.x = 0;
-		if(position.y + size/2 + 70 > GameMap.HEIGHT && direction.y > 0)
+		if(position.y + size/2 > GameMap.HEIGHT-70 && direction.y > 0)
 			direction.y = 0;
-		if(position.x - size/2 - 10 < 0 && direction.x < 0)
+		if(position.x - size/2 < 10 && direction.x < 0)
 			direction.x = 0;
-		if(position.y - size/2 - 10 < 0 && direction.y < 0)
+		if(position.y - size/2 < 10 && direction.y < 0)
 			direction.y = 0;
 		
 		double correctedSpeed = speed * deltaTime * 10;
 		Vector2 targetPosition = position.add(direction.mul(correctedSpeed));
 		position = targetPosition;
-	}
-	
-	private void debug() {
-		System.out.println(toString());
 	}
 	
 	public void randomPosition() {

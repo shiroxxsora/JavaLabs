@@ -6,16 +6,21 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import ru.bsu.webdev.agario.Client.EatableObject;
+import ru.bsu.webdev.agario.Client.Player;
+
 public class ServerCore {
-	private static final int PORT = 10003;
+	// Храним подключенных клиентов
 	public static Set<ClientHandler> clients = Collections.synchronizedSet(new HashSet<>());
 	
-	public void run() {
+	public void run(int port) {
 		System.out.println("Server starting...");
 		
-		try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-			System.out.println("Waiting for clients");
+		try (ServerSocket serverSocket = new ServerSocket(port)) {
+//			FoodSpawner spawner = new FoodSpawner();
+//			new Thread(spawner).run();
 			
+			System.out.println("Waiting for clients");
 			while(true) {
 				Socket clientSocket = serverSocket.accept();
 				System.out.println("Connection with " + clientSocket.getInetAddress());
@@ -31,7 +36,16 @@ public class ServerCore {
 		}
 	}
 	
-	public ServerCore() {
-		System.out.println("Server initialize...");
+	public static void broadcastEatableObject(EatableObject obj) {
+		try {
+			synchronized (clients) {
+				for (ClientHandler client : ServerCore.clients) { 
+					client.sendEatable(obj);
+				} 
+			} 
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		} 
 	}
 }

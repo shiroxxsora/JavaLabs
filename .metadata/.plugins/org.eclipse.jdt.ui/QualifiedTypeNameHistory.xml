@@ -6,8 +6,9 @@
     <fullyQualifiedTypeName name="java.util.Collections"/>
     <fullyQualifiedTypeName name="ru.bsu.webdev.agario.Server.ServerCore"/>
     <fullyQualifiedTypeName name="ru.bsu.webdev.agario.Client.Client"/>
-    <fullyQualifiedTypeName name="ru.bsu.webdev.agario.Client.Player"/>
     <fullyQualifiedTypeName name="ru.bsu.webdev.agario.Client.Vector2"/>
     <fullyQualifiedTypeName name="javax.swing.JFrame"/>
     <fullyQualifiedTypeName name="java.awt.Color"/>
+    <fullyQualifiedTypeName name="ru.bsu.webdev.agario.Client.Player"/>
+    <fullyQualifiedTypeName name="ru.bsu.webdev.agario.Client.GameMap"/>
 </qualifiedTypeNameHistroy>

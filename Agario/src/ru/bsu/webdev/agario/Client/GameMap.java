@@ -6,11 +6,12 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Set;
 
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import ru.bsu.webdev.agario.Server.Commands.InitializePlayer;
+import ru.bsu.webdev.agario.Server.Commands.CreatePlayerRequest;
 
 
 public class GameMap extends JPanel implements KeyListener{
@@ -21,9 +22,11 @@ public class GameMap extends JPanel implements KeyListener{
 	public static int WIDTH = 1280;
 	public static int HEIGHT = 720;
 	
-	private ArrayList<Player> players;
-	private Player player;
-	private FPSCounter counter;
+	public ArrayList<Player> players;
+	public ArrayList<Player> playersToRemove; 
+	private ArrayList<EatableObject> eatables;
+	public Player player;
+	private FPSCounter fpsCounter;
 	
 	private long lastTime;
 	private double deltaTime;
@@ -35,13 +38,19 @@ public class GameMap extends JPanel implements KeyListener{
 		System.out.println("GameMap instance created...");
 		
 		players = new ArrayList<>();
-		createCurrentPlayerFromServer();
-		new Thread(this::listenToServerPlayerMessage).start();
-		counter = new FPSCounter(10, 20);
+		playersToRemove = new ArrayList<>();
+		eatables = new ArrayList<>();
+		
+		sendCreatePlayerRequest(); //  Просим сервер создать игрока
+		new Thread(this::serverListener).start(); //  Запускаем поток который будет слушать сообщения сервера
+		
+		fpsCounter = new FPSCounter(10, 20);
+		
+		// Запускаем цикл update и render
 		mainTimer();
 	}
 	
-	private void listenToServerPlayerMessage() {
+	private void serverListener() {
 		try {
             while (true) {
                 // Ожидаем получения объекта Player от сервера
@@ -57,6 +66,9 @@ public class GameMap extends JPanel implements KeyListener{
                 		System.out.println(players.indexOf(receivedPlayer));
                 		players.set(players.indexOf(receivedPlayer), receivedPlayer);
                 	}
+                }
+                if(received instanceof EatableObject) {
+                	eatables.add((EatableObject) received);
                 }
             }
         } catch (Exception e) {
@@ -77,9 +89,9 @@ public class GameMap extends JPanel implements KeyListener{
         timer.start();
 	}
 	
-	private void createCurrentPlayerFromServer() {
+	private void sendCreatePlayerRequest() {
 		try { 
-			Client.out.writeObject(new InitializePlayer());  // Запрос серверу
+			Client.out.writeObject(new CreatePlayerRequest());  // Запрос серверу
 			Client.out.flush();
 			
 			player = (Player) Client.in.readObject();
@@ -93,16 +105,19 @@ public class GameMap extends JPanel implements KeyListener{
     }
 	
 	protected void update(double deltaTime) {
-		System.out.println(deltaTime);
-		
 		if(players.isEmpty()) return;
 		
-		for(Player player:players){
+		for(Player player : players){
 			player.update(deltaTime);
 		}
-
 		
-		counter.update(deltaTime);
+		for (Player player : playersToRemove) {
+            players.remove(player);
+        }
+		
+        playersToRemove.clear();
+
+		fpsCounter.update(deltaTime);
 	}
 	
 	protected void render(Graphics g) {
@@ -111,11 +126,15 @@ public class GameMap extends JPanel implements KeyListener{
 		
 		if(players.isEmpty()) return;
 		
-		for(Player player:players){
+		for(EatableObject eatable : eatables) {
+			eatable.render(g);
+		}
+		
+		for(Player player : players){
 			player.render(g);
 		}
 		
-		counter.render(g);
+		fpsCounter.render(g);
 	}
 	
 	protected void paintComponent(Graphics g) {

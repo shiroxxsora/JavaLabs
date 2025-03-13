@@ -1,13 +1,13 @@
 package ru.bsu.webdev.agario.Server;
 
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+import ru.bsu.webdev.agario.Client.EatableObject;
 import ru.bsu.webdev.agario.Client.Player;
 import ru.bsu.webdev.agario.Server.Commands.CMD;
-import ru.bsu.webdev.agario.Server.Commands.InitializePlayer;
+import ru.bsu.webdev.agario.Server.Commands.CreatePlayerRequest;
 
 public class ClientHandler extends Thread{
 	private Socket socket;
@@ -23,7 +23,7 @@ public class ClientHandler extends Thread{
 		System.out.println("Создан новый ClientHandler" + socket.getInetAddress());
 		try {
 			out = new ObjectOutputStream(socket.getOutputStream());
-			out.flush(); // Обязательно или клиент или сервер должны отправить заголовок
+			//out.flush(); // Обязательно или клиент или сервер должны отправить заголовок
 			in = new ObjectInputStream(socket.getInputStream());
 		}
 		catch(Exception e) {
@@ -38,7 +38,7 @@ public class ClientHandler extends Thread{
             Object message;
             while ((message = in.readObject()) != null) {
                 if(message instanceof CMD) {
-	                if(message instanceof InitializePlayer) {
+	                if(message instanceof CreatePlayerRequest) {
 	                	addNewPlayerOnServer();
 	                }
                 }
@@ -111,6 +111,15 @@ public class ClientHandler extends Thread{
 		catch (Exception e) {
 			e.printStackTrace();
 		} 
+	}
+
+	public void sendEatable(EatableObject obj) {
+		try {
+			out.writeObject(obj);
+			out.flush();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 }
